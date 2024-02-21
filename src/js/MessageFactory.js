@@ -1,13 +1,26 @@
 import CreationElements from './CreationElements';
+import validationFileName from './validationFileName';
 
 export default class MessageFactory {
-  constructor() {
+  constructor(port) {
+    this.port = port;
+
     this.createTextContent = this.createTextContent.bind(this);
+    this.createLinkContent = this.createLinkContent.bind(this);
     this.createSticker = this.createSticker.bind(this);
+    this.createAudioContent = this.createAudioContent.bind(this);
+    this.createVideoContent = this.createVideoContent.bind(this);
+    this.createImageContent = this.createImageContent.bind(this);
+    this.createOtherContent = this.createOtherContent.bind(this);
 
     this.typesList = {
       text: this.createTextContent,
+      links: this.createLinkContent,
       sticker: this.createSticker,
+      audio: this.createAudioContent,
+      video: this.createVideoContent,
+      image: this.createImageContent,
+      other: this.createOtherContent,
     };
 
     this.messageObj = null;
@@ -25,6 +38,11 @@ export default class MessageFactory {
     messageEl.append(favorites);
 
     const contentBox = CreationElements.createElement('div', ['message_content']);
+    if (this.messageObj.fileStatus && this.messageObj.type !== 'other') {
+      const fileTitle = CreationElements.createElement('h4', ['message_content-title']);
+      fileTitle.textContent = validationFileName(this.messageObj.fileName, 25);
+      contentBox.append(fileTitle);
+    }
 
     const content = this.createContent();
     contentBox.append(content);
@@ -67,13 +85,21 @@ export default class MessageFactory {
   }
 
   createBtnsBox() {
-    const btnsBox = CreationElements.createElement('div', ['message_btns-ctrl', 'hidden']);
+    const btnsBox = CreationElements.createElement('div', ['message_btns-ctrl']);
     const btnDel = CreationElements.createElement('button', ['del-messaage', 'message-ctrl_btn'], [{ name: 'type', value: 'button' }]);
     btnDel.addEventListener('click', this.listeners.delete);
     const btnPin = CreationElements.createElement('button', ['pinned-message', 'message-ctrl_btn'], [{ name: 'type', value: 'button' }]);
     btnPin.addEventListener('click', this.listeners.pinned);
     btnsBox.append(btnDel);
     btnsBox.append(btnPin);
+
+    if (this.messageObj.fileStatus) {
+      const download = CreationElements.createElement('button', ['download_message', 'message-ctrl_btn'], [{ name: 'type', value: 'button' }]);
+      download.dataset.url = this.messageObj.message.link;
+      download.dataset.name = this.messageObj.fileName;
+      download.addEventListener('click', this.listeners.download);
+      btnsBox.append(download);
+    }
 
     return btnsBox;
   }
@@ -85,8 +111,75 @@ export default class MessageFactory {
     return result;
   }
 
+  createLinkContent() {
+    const result = CreationElements.createElement(
+      'a',
+      ['message_link'],
+      [
+        { name: 'href', value: this.messageObj.message },
+        { name: 'target', value: '_blank' },
+      ],
+    );
+    const text = this.messageObj.message;
+    result.textContent = text.length > 50 ? `${text.slice(0, 50)}...` : text;
+
+    return result;
+  }
+
   createSticker() {
     const result = CreationElements.createElement('div', ['message_sticker', `${this.messageObj.message.className}`]);
+
+    return result;
+  }
+
+  createAudioContent() {
+    const result = CreationElements.createElement(
+      'audio',
+      ['content_media'],
+      [
+        { name: 'src', value: `${this.port}${this.messageObj.message.link}` },
+        { name: 'controls', value: true },
+      ],
+    );
+
+    return result;
+  }
+
+  createVideoContent() {
+    const result = CreationElements.createElement(
+      'video',
+      ['content_media'],
+      [
+        { name: 'src', value: `${this.port}${this.messageObj.message.link}` },
+        { name: 'controls', value: true },
+      ],
+    );
+
+    return result;
+  }
+
+  createImageContent() {
+    const result = CreationElements.createElement(
+      'img',
+      ['message_image'],
+      [
+        { name: 'src', value: `${this.port}${this.messageObj.message.link}` },
+      ],
+    );
+
+    return result;
+  }
+
+  createOtherContent() {
+    const result = CreationElements.createElement(
+      'p',
+      ['message_other'],
+    );
+
+    result.textContent = validationFileName(this.messageObj.fileName, 35);
+
+    result.dataset.url = this.messageObj.message.link;
+    result.dataset.name = this.messageObj.fileName;
 
     return result;
   }

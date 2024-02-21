@@ -1,19 +1,37 @@
 import AsidePanelController from './AsidePanelController';
 import StickeProcessing from './Message Processing/StickerProcessing';
 import TextInputProcessing from './Message Processing/TextInputProcessing';
+import createDownloadLink from './createDownloadLink';
 
 export default class OrganizerController {
-  constructor(widget, communicator, geolocator, errMessage, toolTip, informWidget) {
+  constructor(
+    widget,
+    communicator,
+    geolocator,
+    errMessage,
+    toolTip,
+    informWidget,
+    bot,
+    media,
+    fileController,
+    searcher,
+  ) {
     this.widget = widget;
     this.communicator = communicator;
     this.geolocator = geolocator;
     this.errMessage = errMessage;
     this.toolTip = toolTip;
     this.informWidget = informWidget;
+    this.bot = bot;
+    this.media = media;
+    this.fileController = fileController;
+    this.searcher = searcher;
 
     this.aside = null;
     this.enterText = null;
     this.sticker = null;
+
+    this.activeFilter = 'all';
 
     this.messagingOpen = this.messagingOpen.bind(this);
     this.messagingClose = this.messagingClose.bind(this);
@@ -21,14 +39,19 @@ export default class OrganizerController {
     this.messagingReader = this.messagingReader.bind(this);
     this.filtrationMessagesList = this.filtrationMessagesList.bind(this);
     this.showPinnedMessage = this.showPinnedMessage.bind(this);
+    this.showSearchMessage = this.showSearchMessage.bind(this);
+    this.scrollToOldMessage = this.scrollToOldMessage.bind(this);
+    this.addOldMessages = this.addOldMessages.bind(this);
 
     this.addToFavoritesMessage = this.addToFavoritesMessage.bind(this);
     this.deleteMessage = this.deleteMessage.bind(this);
     this.pinMessage = this.pinMessage.bind(this);
+    this.downloadFile = this.downloadFile.bind(this);
     this.messageListeners = {
       favorites: this.addToFavoritesMessage,
       delete: this.deleteMessage,
       pinned: this.pinMessage,
+      download: this.downloadFile,
     };
   }
 
@@ -42,8 +65,17 @@ export default class OrganizerController {
 
       if (this.sticker
         && this.sticker.stickerStatus
-        && e.target !== this.sticker.btnSticker) this.sticker.toggleVisabilitySticker();
-    });
+        && e.target !== this.sticker.btnSticker
+        && !e.target.closest('.sticker_box')) this.sticker.toggleVisabilitySticker();
+
+      if (this.bot.isFairTarget(e.target)) this.bot.validationBotStatus();
+
+      if (this.media.stream && !e.target.closest('.organizer_footer')) e.stopImmediatePropagation();
+
+      if (this.searcher.searchStatus && !e.target.closest('.options_wrapper')) this.searcher.stopStream();
+    }, { capture: true });
+
+    this.widget.messageListWrapper.addEventListener('scroll', this.scrollToOldMessage);
 
     this.communicator.messaging(
       this.messagingOpen,
@@ -58,11 +90,50 @@ export default class OrganizerController {
       this.filtrationMessagesList,
     );
     this.aside.activation();
+
+    this.bot.activation();
+    this.searcher.activation(this.showSearchMessage);
   }
 
-  messagingOpen(e) {
-    console.log('Соединение с сервером установлено', e);
+  scrollToOldMessage() {
+    const scrolledElTop = this.widget.messageListWrapper.getBoundingClientRect().top;
+    const messageListTop = this.widget.messageList.getBoundingClientRect().top;
 
+    if (scrolledElTop === messageListTop) this.addOldMessages(10);
+  }
+
+  addOldMessages(count) {
+    const message = this.widget.findOldestMessage();
+
+    if (message) {
+      const { id } = message.dataset;
+
+      this.communicator.getMessagesByFilter(this.activeFilter, count, id).then((response) => {
+        if (response.ok) {
+          return response.json();
+        }
+        throw new Error('Не удалось загрузить более старые сообщения');
+      }).then((data) => {
+        if (data) {
+          if (data) {
+            this.widget.readMessagesList(
+              data.reverse(),
+              this.messageListeners,
+              this.showPinnedMessage,
+              this.communicator.deletePinnedStatus,
+              true,
+            );
+          }
+          return;
+        }
+        throw new Error('Не удалось обработать ответ сервера');
+      }).catch((err) => {
+        this.errMessage.showMessage(err.message);
+      });
+    }
+  }
+
+  messagingOpen() {
     this.enterText = new TextInputProcessing(
       this.widget.enterText,
       this.widget.emojiBtn,
@@ -79,22 +150,22 @@ export default class OrganizerController {
       this.geolocator.getCoordinates,
     );
     this.sticker.activation();
+
+    this.media.activation();
+
+    this.fileController.activation();
   }
 
-  messagingClose(e) {
-    console.log('соединение с сервером закрыто', e);
+  messagingClose() {
     this.informWidget.showMessage('Соединение с сервером закрыто. Попробуйте перезапустить приложение.');
   }
 
-  messagingError(e) {
-    console.log('произошла ошибка', e);
+  messagingError() {
     this.errMessage.showMessage('Произошла ошибка соединения с сервером. Попробуйте перезапустить приложение.');
   }
 
   messagingReader(e) {
     const { listCounters, listMessages } = JSON.parse(e.data);
-
-    console.log('incoming message: ', e.data);
 
     if (listMessages && listMessages.length !== 0) {
       this.widget.readMessagesList(
@@ -120,7 +191,9 @@ export default class OrganizerController {
   }
 
   filtrationMessagesList(filter) {
-    this.communicator.getMessagesByFilter(filter).then((response) => {
+    this.activeFilter = filter;
+
+    this.communicator.getMessagesByFilter(filter, 10).then((response) => {
       if (response.ok) {
         return response.json();
       }
@@ -128,14 +201,12 @@ export default class OrganizerController {
     }).then((data) => {
       if (data) {
         this.widget.clearMessagesList();
-        if (data) {
-          this.widget.readMessagesList(
-            data,
-            this.messageListeners,
-            this.showPinnedMessage,
-            this.communicator.deletePinnedStatus,
-          );
-        }
+        this.widget.readMessagesList(
+          data,
+          this.messageListeners,
+          this.showPinnedMessage,
+          this.communicator.deletePinnedStatus,
+        );
         return;
       }
       throw new Error('Не удалось обработать ответ сервера');
@@ -170,7 +241,10 @@ export default class OrganizerController {
       }
       throw new Error('Не удалось удалить сообщение');
     }).then((data) => {
-      e.target.closest('li').remove();
+      this.widget.delMessage(e.target.closest('li'));
+
+      if (this.widget.messageBox.length < 10) this.addOldMessages(1);
+
       this.aside.updateCountAll(data.listCounters);
     }).catch((err) => {
       this.errMessage.showMessage(err.message);
@@ -196,6 +270,22 @@ export default class OrganizerController {
     });
   }
 
+  downloadFile(e) {
+    this.communicator.downloadFileFromServer(e.target.dataset.url).then((response) => {
+      if (response.ok) {
+        return response.blob();
+      }
+      throw new Error('Не удалось скачать файл');
+    }).then((blob) => {
+      const objectURL = URL.createObjectURL(blob);
+      const link = createDownloadLink(objectURL, e.target.dataset.name);
+
+      link.click();
+      link.remove();
+      URL.revokeObjectURL(objectURL);
+    });
+  }
+
   showPinnedMessage(e) {
     if (!e.target.classList.contains('btn-delete_pinned')) {
       this.communicator.getPinnedMessage().then((response) => {
@@ -207,12 +297,17 @@ export default class OrganizerController {
         this.widget.renderPinnedMessage(
           data.pinnedMessage,
           this.messageListeners,
-          this.showPinnedMessage,
-          this.communicator.deletePinnedStatus,
         );
       }).catch((err) => {
         this.errMessage.showMessage(err.message);
       });
     }
+  }
+
+  showSearchMessage(obj) {
+    this.widget.renderSearchMessage(
+      obj,
+      this.messageListeners,
+    );
   }
 }

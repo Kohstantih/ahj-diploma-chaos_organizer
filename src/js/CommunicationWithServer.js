@@ -20,8 +20,8 @@ export default class CommunicationWithServer {
     this.ws.addEventListener('message', callbackMessage);
   }
 
-  async getMessagesByFilter(filter) {
-    const url = `${this.port}/filters/${filter}`;
+  async getMessagesByFilter(filter, count, id) {
+    const url = `${this.port}/filters/${filter}/${count}/${id}`;
 
     const response = fetch(url);
 
@@ -74,6 +74,23 @@ export default class CommunicationWithServer {
     const response = fetch(url, {
       method: 'DELETE',
     });
+
+    return response;
+  }
+
+  async sendFile(data) {
+    const url = `${this.port}/files`;
+
+    const response = fetch(url, {
+      method: 'POST',
+      body: data,
+    });
+
+    return response;
+  }
+
+  async downloadFileFromServer(url) {
+    const response = fetch(`${this.port}${url}`);
 
     return response;
   }

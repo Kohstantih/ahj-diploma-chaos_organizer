@@ -17,20 +17,29 @@ export default class OrganizerWidget {
     this.inactiveMessageClass = 'inactive_favorites';
 
     this.lastMessage = null;
+    this.messageBox = [];
   }
 
-  readMessagesList(messagesList, listenersList, showPinned, reqDeletePinned) {
-    messagesList.forEach((m) => this.addMessage(m, listenersList, showPinned, reqDeletePinned));
+  readMessagesList(messagesList, listeners, showPinned, reqDelPinned, scroll) {
+    messagesList.forEach((m) => this.addMessage(m, listeners, showPinned, reqDelPinned, scroll));
   }
 
-  addMessage(obj, listenersList, showPinned, reqDeletePinned) {
-    this.renderMessage(this.factory.createMessage(obj, listenersList));
-    if (obj.pinned) this.adPinnedMessage(obj, showPinned, reqDeletePinned);
+  addMessage(obj, listenersList, showPinned, reqDeletePinned, scroll) {
+    this.renderMessage(this.factory.createMessage(obj, listenersList), scroll);
+    if (obj.pinned && showPinned) this.adPinnedMessage(obj, showPinned, reqDeletePinned);
   }
 
-  renderMessage(element) {
+  renderMessage(element, scroll) {
     this.lastMessage = element;
-    this.messageList.append(element);
+    if (scroll) {
+      this.messageList.prepend(element);
+      this.messageBox.unshift(element);
+    } else {
+      this.messageList.append(element);
+      this.messageBox.push(element);
+    }
+
+    if (this.messageBox.length > 10 && !scroll) this.delMessage(this.messageBox[0]);
   }
 
   changeFavoritesStatus(element) {
@@ -47,13 +56,31 @@ export default class OrganizerWidget {
     if (pinnedMessage) this.messageListWrapper.append(pinnedMessage);
   }
 
-  renderPinnedMessage(obj, listenersList, showPinned, reqDeletePinned) {
+  renderPinnedMessage(obj, listenersList) {
     this.clearMessagesList();
 
-    this.addMessage(obj, listenersList, showPinned, reqDeletePinned);
+    this.renderMessage(this.factory.createMessage(obj, listenersList), false);
+  }
+
+  renderSearchMessage(obj, listenersList) {
+    this.clearMessagesList();
+
+    this.addMessage(obj, listenersList);
   }
 
   clearMessagesList() {
+    this.messageBox = [];
     [...this.messageList.children].forEach((el) => el.remove());
+  }
+
+  delMessage(element) {
+    element.remove();
+    this.messageBox = this.messageBox.filter((m) => m !== element);
+
+    if (this.pinned.isMessagePinned(element)) this.pinned.deletePreviewPinnedMessage();
+  }
+
+  findOldestMessage() {
+    return this.messageBox[0];
   }
 }

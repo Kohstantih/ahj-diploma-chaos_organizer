@@ -1,24 +1,27 @@
 export default class ToolTip {
-  constructor(classNameTooltip) {
-    this.classNameTooltip = classNameTooltip;
-
+  constructor() {
     this.toolTipsBox = [];
+    this.clessesList = {
+      up: 'tooltip-up',
+      down: 'tooltip-down',
+    };
   }
 
-  showToolTip(element, message) {
+  showToolTip(element, message, position) {
     const toolTip = document.createElement('div');
-    toolTip.classList.add(this.classNameTooltip);
+    toolTip.classList.add('tooltip', this.clessesList[position]);
     toolTip.textContent = message;
     toolTip.dataset.name = element.name;
     this.toolTipsBox.push(toolTip);
 
     document.body.append(toolTip);
 
-    const { top, left } = element.getBoundingClientRect();
+    const { top, bottom, left } = element.getBoundingClientRect();
     const offsetHorizont = (toolTip.offsetWidth - element.offsetWidth) / 2;
 
     toolTip.style.left = `${left - offsetHorizont}px`;
-    toolTip.style.top = `${top - toolTip.offsetHeight - 10}px`;
+    if (position === 'down') toolTip.style.top = `${bottom + 5}px`;
+    if (position === 'up') toolTip.style.top = `${top - toolTip.offsetHeight - 10}px`;
   }
 
   hideAllToolTips() {

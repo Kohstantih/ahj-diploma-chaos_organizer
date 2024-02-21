@@ -8,7 +8,7 @@ export default class AsidePanelController {
     this.counters = this.createCountersObj();
 
     this.markActive = false;
-    this.activeFilter = null;
+    this.activeFilter = document.getElementById('all');
 
     this.activatorFilter = this.activatorFilter.bind(this);
 
@@ -49,12 +49,10 @@ export default class AsidePanelController {
   }
 
   activatorFilter(e) {
-    if ((!this.activeFilter && e.currentTarget === 'all') || (this.activeFilter && e.currentTarget.id === this.activeFilter.id)) return;
-
-    if (this.activeFilter) this.activeFilter.removeAttribute('style');
+    if (this.activeFilter) this.activeFilter.classList.remove('active-filter');
 
     this.activeFilter = e.currentTarget;
-    this.activeFilter.style.color = 'blue';
+    this.activeFilter.classList.add('active-filter');
 
     this.filtrator(this.activeFilter.id);
   }

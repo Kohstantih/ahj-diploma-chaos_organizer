@@ -5,19 +5,21 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta http-equiv="X-UA-Compatible" content="ie=edge">
     <title>Chaos Organizer</title>
+    <link rel="shortcut icon" href="#" />
 </head>
 <body>
     <div class="container">
         <div class="organizer-box">
+            <input name="file" type="file" class="file-loader">
             <h1 class="organizer_title">Chaos Organizer</h1>
             <div class="organizer_header">
                 <div class="profile_box">
-                    <img src="./img/avatar.png" alt="Изображение профиля" class="profile_img">
-                    <span class="profile_name">Beard</span>
+                    <img src="./img/avatar.svg" alt="Изображение профиля" class="profile_img">
+                    <span class="profile_name">Гость</span>
                 </div>
                 <div class="options_box">
                     <div class="bot-btn_wrapper">
-                        <button type="button" class="bot-control_btn header_btn"></button>
+                        <button type="button" class="bot-control_btn header_btn" aria-label="Открыть команды боту"></button>
                     </div>
                     <div class="options_wrapper">
                         <div class="options-input_box options-active">
@@ -29,18 +31,24 @@
                             <input type="text" name="bot" placeholder="Что вас интересует?" class="bot-input">
                             <div class="options_icon bot-icon"></div>
                         </div>
+                        <div class="search-preview_box hidden">
+                            <p class="search-preview_info"></p>
+                            <ul class="search-preview_list"></ul>
+                        </div>
                     </div>
                 </div>
                 <div class="header-btn_box">
-                    <button type="button" class="load-file_btn header_btn"></button>
-                    <button type="button" class="toggle-aside_btn header_btn"></button>
+                    <button type="button" class="load-file_btn header_btn" aria-label="Загрузить файл"></button>
+                    <button type="button" class="toggle-aside_btn header_btn" aria-label="Открыть боковую панель"></button>
                 </div>
-                <!-- <div class="bot-info_container"></div> -->
+                <div class="bot-info_container hidden">
+                    <div class="bot-info_icon"></div>
+                    <div class="bot-info_content"></div>
+                </div>
             </div>
             <div class="organizer_body">
                 <div class="message-list_wrapper">
-                    <ul class="message-list">
-                    </ul>
+                    <ul class="message-list"></ul>
                 </div>
                 <div class="organizer_aside hidden">
                     <ul class="aside-menu_list">
@@ -48,6 +56,11 @@
                             <div class="item_img item-filter aside_favorites"></div>
                             <span data-id="favorites" class="item_counter item-filter">0</span>
                             <span class="item_name">Избранное</span>
+                        </li>
+                        <li id="image" class="menu_item">
+                            <div class="item_img item-filter aside_image"></div>
+                            <span data-id="image" class="item_counter item-filter">0</span>
+                            <span class="item_name">Изображения</span>
                         </li>
                         <li id="video" class="menu_item">
                             <div class="item_img item-filter aside_video"></div>
@@ -79,7 +92,7 @@
                             <span data-id="sticker" class="item_counter item-filter">0</span>
                             <span class="item_name">Стикеры</span>
                         </li>
-                        <li id="all" class="menu_item">
+                        <li id="all" class="menu_item active-filter">
                             <div class="item_img item-filter aside_all"></div>
                             <span data-id="all" class="item_counter item-filter">0</span>
                             <span class="item_name">Все</span>
@@ -88,43 +101,67 @@
                 </div>
             </div>
             <div class="organizer_footer">
-                <div class="emoji-btns_box footer-item">
-                    <button type="button" class="add-sticker_btn footer_btn"></button>
-                    <button type="button" data-emoji="&#x1f601;" class="add-emoji_btn footer_btn"></button>
+                <div class="wrapper_standart-footer">
+                    <div class="emoji-btns_box">
+                        <button type="button" class="add-sticker_btn footer_btn" aria-label="Добавить стикер"></button>
+                        <button type="button" data-emoji="&#x1f601;" class="add-emoji_btn footer_btn" aria-label="Добавить смайл"></button>
+                    </div>
+                    <div class="enter-text_box">
+                        <input type="text" placeholder="Напишите..." class="enter-text">
+                    </div>
+                    <div class="rec-media_box">
+                        <button type="button" class="rec-btn_audio footer_btn" aria-label="Начать запись аудио сообщения"></button>
+                        <button type="button" class="rec-btn_video footer_btn" aria-label="Начать запись видео сообщения"></button>
+                    </div>
+                                        
+                                        <!-- --- Emoji --- -->
+
+                    <div class="emoji_box hidden">
+                        <button type="button" class="emoji_item">&#128512;</button>
+                        <button type="button" class="emoji_item">&#129315;</button>
+                        <button type="button" class="emoji_item">&#128579;</button>
+                        <button type="button" class="emoji_item">&#128521;</button>
+                        <button type="button" class="emoji_item">&#129321;</button>
+                        <button type="button" class="emoji_item">&#129322;</button>
+                        <button type="button" class="emoji_item">&#129312;</button>
+                        <button type="button" class="emoji_item">&#128075;</button>
+                        <button type="button" class="emoji_item">&#9996;</button>
+                        <button type="button" class="emoji_item">&#127757;</button>
+                    </div>
+
+                                        <!-- --- Stickers --- -->
+
+                    <div class="sticker_box hidden">
+                        <button type="button" data-sticker="sticker_animal" class="sticker sticker_animal" aria-label="Стикер летучая мышь"></button>
+                        <button type="button" data-sticker="sticker_monarch" class="sticker sticker_monarch" aria-label="Стикер бабочка"></button>
+                        <button type="button" data-sticker="sticker_lion" class="sticker sticker_lion" aria-label="Стикер лев"></button>
+                        <button type="button" data-sticker="sticker_geppetto" class="sticker sticker_geppetto" aria-label="Стикер дедушка"></button>
+                        <button type="button" data-sticker="sticker_heart" class="sticker sticker_heart" aria-label="Стикер сердце"></button>
+                        <button type="button" data-sticker="sticker_scooter" class="sticker sticker_scooter" aria-label="Стикер скутер"></button>
+                        <button type="button" data-sticker="sticker_laptop" class="sticker sticker_laptop" aria-label="Стикер ноутбук"></button>
+                        <button type="button" data-sticker="sticker_italy" class="sticker sticker_italy" aria-label="Стикер Италия"></button>
+                        <button type="button" data-sticker="sticker_angry" class="sticker sticker_angry" aria-label="Стикер злой"></button>
+                        <button type="button" data-sticker="sticker_travel" class="sticker sticker_travel" aria-label="Стикер путешествие"></button>
+                    </div>
                 </div>
-                <div class="enter-text_box footer-item">
-                    <input type="text" placeholder="Напишите..." class="enter-text">
-                </div>
-                <div class="rec-media_box footer-item">
-                    <button type="button" class="rec-btn_audio footer_btn"></button>
-                    <button type="button" class="rec-btn_video footer_btn"></button>
-                </div>
-                <div class="emoji_box hidden">
-                    <button type="button" class="emoji_item">&#128512;</button>
-                    <button type="button" class="emoji_item">&#129315;</button>
-                    <button type="button" class="emoji_item">&#128579;</button>
-                    <button type="button" class="emoji_item">&#128521;</button>
-                    <button type="button" class="emoji_item">&#129321;</button>
-                    <button type="button" class="emoji_item">&#129322;</button>
-                    <button type="button" class="emoji_item">&#129312;</button>
-                    <button type="button" class="emoji_item">&#128075;</button>
-                    <button type="button" class="emoji_item">&#9996;</button>
-                    <button type="button" class="emoji_item">&#127757;</button>
-                </div>
-                <div class="sticker_box hidden">
-                    <button type="button" data-sticker="sticker_animal" class="sticker sticker_animal"></button>
-                    <button type="button" data-sticker="sticker_monarch" class="sticker sticker_monarch"></button>
-                    <button type="button" data-sticker="sticker_lion" class="sticker sticker_lion"></button>
-                    <button type="button" data-sticker="sticker_geppetto" class="sticker sticker_geppetto"></button>
-                    <button type="button" data-sticker="sticker_heart" class="sticker sticker_heart"></button>
-                    <button type="button" data-sticker="sticker_scooter" class="sticker sticker_scooter"></button>
-                    <button type="button" data-sticker="sticker_laptop" class="sticker sticker_laptop"></button>
-                    <button type="button" data-sticker="sticker_italy" class="sticker sticker_italy"></button>
-                    <button type="button" data-sticker="sticker_angry" class="sticker sticker_angry"></button>
-                    <button type="button" data-sticker="sticker_travel" class="sticker sticker_travel"></button>
+
+                                        <!-- --- Rec Box --- -->
+
+                <div class="footer_rec-active hidden">
+                    <div class="btn_box box_rec">
+                        <button type="button" class="btn_end footer_btn" aria-label="Остановить запись"></button>
+                        <p class="timer_rec">00 : 00</p>
+                        <button type="button" class="btn_cansel footer_btn" aria-label="Отменить запись"></button>
+                    </div>
+                    <div class="preview_box hidden">
+                        <video class="preview" autoplay muted></video>
+                    </div>
                 </div>
             </div>
         </div>
+
+                                    <!-- --- Form Coordinates --- -->
+
         <form name="entercoords" class="coords_user hidden">
             <h5 class="inform_title">Что-то пошло не так</h5>
             <p class="inform_text">
@@ -135,11 +172,17 @@
             <p class="coords_comment">Широта и долгота через запятую</p>
             <input name="coords" type="text" class="enter_coords">
         </form>
+
+                                    <!-- --- ERROR --- -->
+
         <div class="error-message_box hidden">
             <h3 class="error-message_title">Произошла ошибка</h3>
             <span class="error-message_text"></span>
             <button type="button" class="error-message_ok">Ok</button>
         </div>
+
+                                    <!-- --- INFORM --- -->
+
         <div class="inform_box hidden">
             <span class="inform_message"></span>
             <button type="button" class="inform_ok">Ok</button>

@@ -38,6 +38,7 @@ export default class StickeProcessing {
       message: value,
       favorites: false,
       pinned: false,
+      fileStatus: false,
       date: GetDate.getFormatDate(),
     };
 

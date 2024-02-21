@@ -1,19 +1,4 @@
 export default class GetDate {
-  static getFormatDate() {
-    const date = new Date();
-
-    const dd = GetDate.getDay(date);
-    const mm = GetDate.getMonth(date);
-    const yy = GetDate.getYear(date);
-    const fullDate = `${dd}.${mm}.${yy}`;
-
-    const time = date.toTimeString().slice(0, 5);
-
-    const result = `${fullDate} ${time}`;
-
-    return result;
-  }
-
   static getDay(date) {
     let dd = date.getDate();
     if (dd.length === 1) dd = `0${dd}`;
@@ -28,6 +13,29 @@ export default class GetDate {
 
   static getYear(date) {
     const result = `${date.getUTCFullYear()}`;
+
+    return result;
+  }
+
+  static getFullDate(date) {
+    const dateNow = date || new Date();
+
+    const dd = GetDate.getDay(dateNow);
+    const mm = GetDate.getMonth(dateNow);
+    const yy = GetDate.getYear(dateNow);
+    return `${dd}.${mm}.${yy}`;
+  }
+
+  static getTime(date) {
+    const dateNow = date || new Date();
+
+    return dateNow.toTimeString().slice(0, 5);
+  }
+
+  static getFormatDate(timestamp) {
+    const date = timestamp ? new Date(timestamp) : new Date();
+
+    const result = `${GetDate.getFullDate(date)} ${GetDate.getTime(date)}`;
 
     return result;
   }

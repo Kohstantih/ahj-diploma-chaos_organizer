@@ -1,4 +1,6 @@
 import CreationElements from './CreationElements';
+import validationFileName from './validationFileName';
+import validationLengthMessage from './validationLengthMessage';
 
 export default class PinnedMessageController {
   constructor(errMessage) {
@@ -7,8 +9,13 @@ export default class PinnedMessageController {
     this.pinnedMessage = null;
 
     this.imgList = {
-      text: './img/text.png',
+      text: 'pinned-text',
+      file: 'pinned-file',
+      links: 'pinned-links',
+      sticker: 'pinned-sticker',
     };
+
+    this.filesType = ['other', 'audio', 'video', 'image'];
   }
 
   createPinnedElement(messageObj, showPinned, reqDeletePinned) {
@@ -39,21 +46,13 @@ export default class PinnedMessageController {
   }
 
   createImage(messageObj) {
-    const src = this.imgList[messageObj.type];
+    let classImg = null;
+    if (messageObj.fileStatus) classImg = this.imgList.file;
+    else classImg = this.imgList[messageObj.type];
 
     const img = CreationElements.createElement(
-      'img',
-      ['pinned_image'],
-      [
-        {
-          name: 'src',
-          value: src,
-        },
-        {
-          name: 'alt',
-          value: 'Изображение закрепленного сообщения',
-        },
-      ],
+      'div',
+      ['pinned_image', classImg],
     );
 
     return img;
@@ -67,12 +66,10 @@ export default class PinnedMessageController {
     return btn;
   }
 
-  deletePinnedMessage(reqDeletePinned, e) {
-    const pinnedMessage = e.target.closest('.pinned_box');
-
+  deletePinnedMessage(reqDeletePinned) {
     reqDeletePinned().then((response) => {
       if (response.ok) {
-        pinnedMessage.remove();
+        this.deletePreviewPinnedMessage();
         return;
       }
       throw new Error('Не удалось удалить закреплённое сообщение');
@@ -81,19 +78,32 @@ export default class PinnedMessageController {
     });
   }
 
+  deletePreviewPinnedMessage() {
+    this.pinnedMessage.remove();
+    this.pinnedMessage = null;
+  }
+
+  isMessagePinned(element) {
+    if (!this.pinnedMessage) return false;
+    if (element.dataset.id === this.pinnedMessage.dataset.id) return true;
+
+    return false;
+  }
+
   createContent(messageObj) {
     const content = CreationElements.createElement('h3', ['pinned_title']);
 
-    if (messageObj.type === 'text') content.textContent = PinnedMessageController.validationContent(messageObj.message);
+    if (messageObj.type === 'text' || messageObj.type === 'links') content.textContent = validationLengthMessage(messageObj.message, 40);
+
+    if (this.filesType.find((el) => el === messageObj.type)) {
+      content.textContent = validationFileName(messageObj.fileName, 35);
+    }
+
+    if (messageObj.type === 'sticker') {
+      content.classList.add('pinned-content_sticker');
+      content.classList.add(messageObj.message.className);
+    }
 
     return content;
-  }
-
-  static validationContent(string) {
-    if (string.length < 15) {
-      return string;
-    }
-    const result = `${string.slice(0, 15)}...`;
-    return result;
   }
 }

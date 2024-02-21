@@ -1,4 +1,5 @@
 import GetDate from '../GetDate';
+import isLink from './isLink';
 
 export default class TextInputProcessing {
   constructor(input, emojiBtn, emojiBox, postman, geolocator, toolTip) {
@@ -20,6 +21,7 @@ export default class TextInputProcessing {
     [...this.emojiBox.children].forEach((emoji) => {
       emoji.addEventListener('click', (e) => {
         this.input.value += e.target.innerText;
+        this.input.focus();
       });
     });
 
@@ -39,20 +41,36 @@ export default class TextInputProcessing {
 
   validation(value) {
     if (value) {
-      this.createMessageObj(value);
       this.input.value = '';
+
+      if (isLink(value)) this.createLinkObj(value);
+      else this.createTextObj(value);
     } else {
       const message = 'Невозможно отправить пустое сообщение';
-      this.toolTip.showToolTip(this.input, message);
+      this.toolTip.showToolTip(this.input, message, 'up');
     }
   }
 
-  createMessageObj(value) {
+  createTextObj(value) {
     const obj = {
       type: 'text',
       message: value,
       favorites: false,
       pinned: false,
+      fileStatus: false,
+      date: GetDate.getFormatDate(),
+    };
+
+    this.geolocator(obj, this.postman);
+  }
+
+  createLinkObj(value) {
+    const obj = {
+      type: 'links',
+      message: value,
+      favorites: false,
+      pinned: false,
+      fileStatus: false,
       date: GetDate.getFormatDate(),
     };
 

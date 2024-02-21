@@ -40,7 +40,7 @@ export default class FormUserEnterCoordsCntrl {
       this.curtain.hideCurtain();
     } else {
       const message = 'Введите координаты в виде: 51.50851, -0.12572';
-      this.toolTip.showToolTip(this.input, message);
+      this.toolTip.showToolTip(this.input, message, 'down');
     }
   }
 }
