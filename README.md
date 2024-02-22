@@ -2,7 +2,7 @@
 
 [![Build status](https://ci.appveyor.com/api/projects/status/3y5ncbf1323imj5c?svg=true)](https://ci.appveyor.com/project/Kohstantih/ahj-diploma-chaos-organizer)
 
-__Заппустить приложение:__   [Chaos Organizer](https://kohstantih.github.io/ahj-diploma-chaos_organizer/)
+__Запустить приложение:__   [Chaos Organizer](https://kohstantih.github.io/ahj-diploma-chaos_organizer/)
 
 __Репозиторий серверной части проекта:__   [Backend](https://github.com/Kohstantih/ahj-diploma-chaos_organizer-backend.git)
 
